@@ -6,12 +6,12 @@ const SPOTIFY_CLIENT_ID = "cadcdebb966f4d3a844d6613579033f6";
 const REDIRECT_URI = "https://mood-tunes-three.vercel.app/callback";
 
 const moodQueries = {
-  chill: { query: "chill study lofi", icon: Cloud, color: "from-purple-400 to-teal-400" },
-  happy: { query: "happy upbeat pop", icon: Smile, color: "from-yellow-400 to-orange-500" },
-  sad: { query: "sad melancholy", icon: Frown, color: "from-blue-600 to-blue-900" },
-  insecure: { query: "sad emotional indie", icon: Meh, color: "from-teal-400 to-gray-600" },
-  burnout: { query: "calm meditation ambient", icon: Cloud, color: "from-gray-700 to-yellow-800" },
-  angst: { query: "angry rock alternative", icon: Flame, color: "from-black to-gray-600" }
+  chill: { query: "lofi hip hop study beats relaxing", icon: Cloud, color: "from-purple-400 to-teal-400" },
+  happy: { query: "pop happy upbeat feel good", icon: Smile, color: "from-yellow-400 to-orange-500" },
+  sad: { query: "heartbreak sad breakup emotional", icon: Frown, color: "from-blue-600 to-blue-900" },
+  insecure: { query: "conan gray heather bedroom pop indie sad", icon: Meh, color: "from-teal-400 to-gray-600" },
+  burnout: { query: "burnt out tired exhausted emotional indie pop", icon: Cloud, color: "from-gray-700 to-yellow-800" },
+  angst: { query: "angsty emo punk rock alternative", icon: Flame, color: "from-black to-gray-600" }
 };
 
 export default function MoodTunes() {
@@ -222,7 +222,7 @@ export default function MoodTunes() {
 
     try {
       const response = await fetch(
-        `https://api.spotify.com/v1/search?q=${encodeURIComponent(moodQueries[mood].query)}&type=track&limit=12`,
+        `https://api.spotify.com/v1/search?q=${encodeURIComponent(moodQueries[mood].query)}&type=track&limit=10`,
         { headers: { 'Authorization': `Bearer ${spotifyToken}` } }
       );
 
