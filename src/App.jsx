@@ -7,11 +7,11 @@ const REDIRECT_URI = "https://mood-tunes-three.vercel.app/callback";
 
 const moodQueries = {
   chill: { query: "lofi hip hop study beats relaxing", icon: Cloud, color: "from-purple-400 to-teal-400" },
-  happy: { query: "pop happy upbeat feel good", icon: Smile, color: "from-yellow-400 to-orange-500" },
-  sad: { query: "heartbreak sad breakup emotional", icon: Frown, color: "from-blue-600 to-blue-900" },
+  happy: { query: "2000s 2010s dance pop katy perry rihanna taylor swift", icon: Smile, color: "from-yellow-400 to-orange-500" },
+  sad: { query: "lewis capaldi olivia rodrigo joji sad crying depressing", icon: Frown, color: "from-blue-600 to-blue-900" },
   insecure: { query: "conan gray heather bedroom pop indie sad", icon: Meh, color: "from-teal-400 to-gray-600" },
-  burnout: { query: "burnt out tired exhausted emotional indie pop", icon: Cloud, color: "from-gray-700 to-yellow-800" },
-  angst: { query: "angsty emo punk rock alternative", icon: Flame, color: "from-black to-gray-600" }
+  burnout: { query: "em beihold marina julia michaels burnt out tired", icon: Cloud, color: "from-gray-700 to-yellow-800" },
+  angst: { query: "filipino opm demi slimademidemiislime because leslie hev abi", icon: Flame, color: "from-black to-gray-600" }
 };
 
 export default function MoodTunes() {
