@@ -1,15 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Music, LogOut, Smile, Frown, Meh, Heart, Cloud, Flame } from 'lucide-react';
 
-// Replace these with your actual Supabase credentials (optional - for future)
-const SUPABASE_CONFIG = {
-  url: 'YOUR_SUPABASE_URL',
-  key: 'YOUR_SUPABASE_ANON_KEY'
-};
-
 // Replace with YOUR Spotify Client ID from Spotify Developer Dashboard
 const SPOTIFY_CLIENT_ID = "cadcdebb966f4d3a844d6613579033f6";
-const REDIRECT_URI = window.location.origin;
+const REDIRECT_URI = "https://mood-tunes-three.vercel.app/callback";
 
 const moodQueries = {
   chill: { query: "chill study lofi", icon: Cloud, color: "from-purple-400 to-teal-400" },
@@ -41,7 +35,7 @@ export default function MoodTunes() {
   const [otpSent, setOtpSent] = useState(false);
   const [generatedOtp, setGeneratedOtp] = useState(null);
 
-  // In-memory user storage (will persist only during session)
+  // In-memory user storage
   const [users, setUsers] = useState([
     { email: 'm@gmail.com', password: '12345', name: 'Demo User' }
   ]);
@@ -49,32 +43,76 @@ export default function MoodTunes() {
   // Load user session on mount
   useEffect(() => {
     const savedUser = sessionStorage.getItem('moodtunes_user');
+    const savedToken = sessionStorage.getItem('spotify_token');
+    
     if (savedUser) {
       const userData = JSON.parse(savedUser);
       setUser(userData);
       setCurrentPage('app');
     }
+    
+    if (savedToken) {
+      setSpotifyToken(savedToken);
+    }
   }, []);
 
-  // Check for Spotify token in URL after redirect
+  // Save user to session storage when it changes
   useEffect(() => {
-    const hash = window.location.hash.substring(1);
-    const params = new URLSearchParams(hash);
-    const token = params.get('access_token');
-    
-    if (token) {
-      setSpotifyToken(token);
-      window.history.replaceState({}, document.title, window.location.pathname);
-      
-      // If we have a token but no user loaded yet, load from session
-      const savedUser = sessionStorage.getItem('moodtunes_user');
-      if (savedUser && !user) {
-        const userData = JSON.parse(savedUser);
-        setUser(userData);
-        setCurrentPage('app');
-      }
+    if (user) {
+      sessionStorage.setItem('moodtunes_user', JSON.stringify(user));
+    } else {
+      sessionStorage.removeItem('moodtunes_user');
     }
   }, [user]);
+
+  // Handle Spotify OAuth callback
+  useEffect(() => {
+    const handleCallback = async () => {
+      const params = new URLSearchParams(window.location.search);
+      const code = params.get('code');
+      const error = params.get('error');
+
+      if (error) {
+        alert('Spotify authorization failed: ' + error);
+        window.history.replaceState({}, document.title, '/');
+        return;
+      }
+
+      if (code && !spotifyToken) {
+        setLoading(true);
+        try {
+          // Exchange code for token using our serverless function
+          const response = await fetch(`/api/spotify-callback?code=${code}`);
+          const data = await response.json();
+
+          if (data.access_token) {
+            setSpotifyToken(data.access_token);
+            sessionStorage.setItem('spotify_token', data.access_token);
+            
+            // Load user if not already loaded
+            const savedUser = sessionStorage.getItem('moodtunes_user');
+            if (savedUser && !user) {
+              const userData = JSON.parse(savedUser);
+              setUser(userData);
+              setCurrentPage('app');
+            }
+            
+            // Clean up URL
+            window.history.replaceState({}, document.title, '/');
+          } else {
+            alert('Failed to get Spotify token: ' + (data.error || 'Unknown error'));
+          }
+        } catch (error) {
+          console.error('Token exchange error:', error);
+          alert('Failed to connect to Spotify. Please try again.');
+        } finally {
+          setLoading(false);
+        }
+      }
+    };
+
+    handleCallback();
+  }, [user, spotifyToken]);
 
   const handleSignup = (e) => {
     e.preventDefault();
@@ -111,6 +149,8 @@ export default function MoodTunes() {
   const handleLogout = () => {
     setUser(null);
     setSpotifyToken(null);
+    sessionStorage.removeItem('moodtunes_user');
+    sessionStorage.removeItem('spotify_token');
     setCurrentPage('login');
     setSelectedMood('');
     setTracks([]);
@@ -122,7 +162,8 @@ export default function MoodTunes() {
   };
 
   const connectToSpotify = () => {
-    const authUrl = `https://accounts.spotify.com/authorize?client_id=${SPOTIFY_CLIENT_ID}&response_type=token&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&scope=user-read-private%20user-read-email`;
+    const scopes = 'user-read-private user-read-email';
+    const authUrl = `https://accounts.spotify.com/authorize?client_id=${SPOTIFY_CLIENT_ID}&response_type=code&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&scope=${encodeURIComponent(scopes)}`;
     window.location.href = authUrl;
   };
 
@@ -188,6 +229,7 @@ export default function MoodTunes() {
       if (!response.ok) {
         if (response.status === 401) {
           setSpotifyToken(null);
+          sessionStorage.removeItem('spotify_token');
           alert('Session expired. Please reconnect to Spotify.');
           return;
         }
