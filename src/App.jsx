@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Music, LogOut, Smile, Frown, Meh, Heart, Cloud, Flame } from 'lucide-react';
+import { Music, LogOut, Smile, Frown, Meh, Cloud, Flame } from 'lucide-react';
 import axios from 'axios';
 
 // Spotify OAuth Config
@@ -17,25 +17,19 @@ const moodQueries = {
 };
 
 const moodTracks = {
-  chill: ["7jXwaYTaruWQVmJgjAyVGj","1mJ9oAPuo3hHspOYamtoYc","7eKgcdYbbjQWjphO6IlZ7k","23MBi1j2kZJw3pTeTM2F3J","1iAm2oejGN7IOsaUkq2tgy","2Dgn3acAIPy3irYt7FHEkA","0sujgb2YTnMPzz9y4wNdWH","7KerpptlTiH5Yi3yt1iIsJ","783WjblRwRmcwQ9io7mBZv"],
-  happy: ["455AfCsOhhLPRc68sE01D8","10Igtw8bSDyyFs7KIsKngZ","35mvY5S1H3J2QZyna3TFe0","1hG4V53eR16jg7jVTNLOiX","5HQVUIKwCEXpe7JIHyY734","5nujrmhLynf4yMoMtj8AQF","3ZFTkvIE7kyPt6Nu3PEa7V","7ju97lgwC2rKQ6wwsf9no9","6kex4EBAj0WHXDKZMEJaaF"],
-  sad: ["3gdPwk2wyOXNRnTA1KXnEr","5rbuv6zso7QSaKt265H3M3","2gMXnyrvIjhVBUZwvLZDMP","4kkWvBCT6wq5NHoJjYRaPU","0SuQMjb2TleiKg1ebQSDnX","4cBm8rv2B5BJWU2pDaHVbF","7qEHsqek33rTcFNT9PFqLf","2uOEendbLHR18khIbwooJ1","5JCoSi02qi3jJeHdZXMmR8"],
-  insecure: ["4xqrdfXkTW4T0RauPLv3WA","5CZ40GBx1sQ9agT82CLQCT","69HzZ3ti9DLwb0GdWCGYSo","0kn2gu8Pd03DiYHzRvX2Xk","6KfoDhO4XUWSbnyKjNp9c4","3vkCueOmm7xQDoJ17W1Pm3","2IVsRhKrx8hlQBOWy4qebo","5UXJzLFdBn6u9FJTCnoHrH","7wTqEW5nrMhvyEhEyTnOMd"],
-  burnout: ["1KQc37jezhunxnOPhvdwSG","5OKyAO31eOeJV5qEx2lv4k","2bu6TFn64ASDFXocD9HQ38","7vu0JkJh0ldukEYbTVcqd0","7loxeufSLQPImESzV0Cn30","75pQd26khpV9EMVBRIeDm6","2n0U2OG5d6TuW5mKx7YrC0","2z1xTVeAvEIdniWEnoGeAH","5o5akY9xnEk6lpMkD8RwD9"],
-  angst: ["2ADSh3Mp744n2586tpUtIW","0NJAqnvbF6vzripOB7PclP","2tzAN1L07SNwnOdgOEeuQr","1nzcXFlq2lJULOJxCg5vBA","57Z7lSnhwx82laEb6rdZPB","2ESL2ZcFU32llFIyXLFy5P","7C9Knp9FzLY6RwgktmW9Ge","7C9Knp9FzLY6RwgktmW9Ge","01iNOMVE89uKaurFTDZX2Y"]
+  chill: ["7jXwaYTaruWQVmJgjAyVGj","1mJ9oAPuo3hHspOYamtoYc","7eKgcdYbbjQWjphO6IlZ7k"],
+  happy: ["455AfCsOhhLPRc68sE01D8","10Igtw8bSDyyFs7KIsKngZ","35mvY5S1H3J2QZyna3TFe0"],
+  sad: ["3gdPwk2wyOXNRnTA1KXnEr","5rbuv6zso7QSaKt265H3M3","2gMXnyrvIjhVBUZwvLZDMP"],
+  insecure: ["4xqrdfXkTW4T0RauPLv3WA","5CZ40GBx1sQ9agT82CLQCT","69HzZ3ti9DLwb0GdWCGYSo"],
+  burnout: ["1KQc37jezhunxnOPhvdwSG","5OKyAO31eOeJV5qEx2lv4k","2bu6TFn64ASDFXocD9HQ38"],
+  angst: ["2ADSh3Mp744n2586tpUtIW","0NJAqnvbF6vzripOB7PclP","2tzAN1L07SNwnOdgOEeuQr"]
 };
 
 export default function MoodTunes() {
+  // --- Auth & User State ---
   const [currentPage, setCurrentPage] = useState('login');
   const [user, setUser] = useState(null);
-  const [spotifyToken, setSpotifyToken] = useState(null);
-  const [selectedMood, setSelectedMood] = useState('');
-  const [tracks, setTracks] = useState([]);
-  const [currentAudio, setCurrentAudio] = useState(null);
-  const [playingTrackId, setPlayingTrackId] = useState(null);
-  const [loading, setLoading] = useState(false);
-
-  // Auth states
+  const [users, setUsers] = useState([{ email: 'm@gmail.com', password: '12345', name: 'Demo User' }]);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
@@ -46,10 +40,15 @@ export default function MoodTunes() {
   const [otpSent, setOtpSent] = useState(false);
   const [generatedOtp, setGeneratedOtp] = useState(null);
 
-  // In-memory user storage
-  const [users, setUsers] = useState([{ email: 'm@gmail.com', password: '12345', name: 'Demo User' }]);
+  // --- Spotify & Music State ---
+  const [spotifyToken, setSpotifyToken] = useState(null);
+  const [selectedMood, setSelectedMood] = useState('');
+  const [tracks, setTracks] = useState([]);
+  const [currentAudio, setCurrentAudio] = useState(null);
+  const [playingTrackId, setPlayingTrackId] = useState(null);
+  const [loading, setLoading] = useState(false);
 
-  // Load user session
+  // --- Load user session ---
   useEffect(() => {
     const savedUser = sessionStorage.getItem('moodtunes_user');
     const savedToken = sessionStorage.getItem('spotify_token');
@@ -62,7 +61,7 @@ export default function MoodTunes() {
     else sessionStorage.removeItem('moodtunes_user');
   }, [user]);
 
-  // Spotify OAuth callback
+  // --- Spotify OAuth Callback ---
   useEffect(() => {
     const handleCallback = async () => {
       const params = new URLSearchParams(window.location.search);
@@ -83,6 +82,7 @@ export default function MoodTunes() {
     handleCallback();
   }, [spotifyToken]);
 
+  // --- Auth Handlers ---
   const handleSignup = (e) => {
     e.preventDefault();
     if (!name || !email || !password) return alert('Fill all fields');
@@ -105,12 +105,6 @@ export default function MoodTunes() {
     if (currentAudio) { currentAudio.pause(); setCurrentAudio(null); setPlayingTrackId(null); }
   };
 
-  const connectToSpotify = () => {
-    const scopes = 'user-read-private user-read-email';
-    const url = `https://accounts.spotify.com/authorize?client_id=${SPOTIFY_CLIENT_ID}&response_type=code&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&scope=${encodeURIComponent(scopes)}`;
-    window.location.href = url;
-  };
-
   const sendResetOtp = () => {
     if (!resetEmail) return alert('Enter email');
     const userExists = users.find(u => u.email === resetEmail);
@@ -123,7 +117,15 @@ export default function MoodTunes() {
     if (otp !== String(generatedOtp)) return alert('Incorrect OTP');
     if (newPassword.length < 5) return alert('Password too short');
     setUsers(users.map(u => u.email === resetEmail ? { ...u, password: newPassword } : u));
-    alert('Password reset success!'); setShowForgotPassword(false); setResetEmail(''); setOtp(''); setNewPassword(''); setOtpSent(false); setGeneratedOtp(null);
+    alert('Password reset success!'); 
+    setShowForgotPassword(false); setResetEmail(''); setOtp(''); setNewPassword(''); setOtpSent(false); setGeneratedOtp(null);
+  };
+
+  // --- Spotify Handlers ---
+  const connectToSpotify = () => {
+    const scopes = 'user-read-private user-read-email';
+    const url = `https://accounts.spotify.com/authorize?client_id=${SPOTIFY_CLIENT_ID}&response_type=code&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&scope=${encodeURIComponent(scopes)}`;
+    window.location.href = url;
   };
 
   const fetchMoodTracks = async (mood) => {
@@ -144,13 +146,13 @@ export default function MoodTunes() {
     audio.addEventListener('ended', () => { setCurrentAudio(null); setPlayingTrackId(null); });
   };
 
+  // --- UI ---
   const MoodIcon = selectedMood ? moodQueries[selectedMood].icon : Music;
   const moodGradient = selectedMood ? moodQueries[selectedMood].color : "from-purple-600 to-blue-600";
 
-  // ---- RENDER ----
+  // --- Login Page ---
   if (currentPage === 'login') return (
     <div className={`min-h-screen bg-gradient-to-br ${moodGradient} flex items-center justify-center p-6`}>
-      {/* LOGIN FORM */}
       <div className="bg-white rounded-2xl shadow p-8 w-full max-w-md">
         <h2 className="text-2xl font-bold mb-4">Login</h2>
         <input type="email" placeholder="Email" value={email} onChange={e => setEmail(e.target.value)} className="w-full p-3 border rounded mb-3"/>
@@ -185,6 +187,7 @@ export default function MoodTunes() {
     </div>
   );
 
+  // --- Signup Page ---
   if (currentPage === 'signup') return (
     <div className={`min-h-screen bg-gradient-to-br ${moodGradient} flex items-center justify-center p-6`}>
       <div className="bg-white rounded-2xl shadow p-8 w-full max-w-md">
@@ -198,56 +201,54 @@ export default function MoodTunes() {
     </div>
   );
 
-  // MAIN APP
+  // --- Main App Page ---
   return (
-    <div className={`min-h-screen bg-gradient-to-br ${moodGradient} p-6`}>
-      <div className="max-w-6xl mx-auto">
-        <div className="bg-white p-6 rounded-2xl shadow mb-6 flex justify-between items-center">
-          <div className="flex items-center gap-3">
-            <MoodIcon size={40} className="text-purple-600"/>
-            <h1 className="text-2xl font-bold">MoodTunes - {user?.name}</h1>
-          </div>
-          <button onClick={handleLogout} className="py-2 px-4 bg-red-500 text-white rounded flex items-center gap-2"><LogOut size={16}/>Logout</button>
+    <div className="min-h-screen bg-gray-100 p-6">
+      <header className="flex justify-between items-center mb-6">
+        <h1 className="text-2xl font-bold text-gray-700">MoodTunes</h1>
+        <div className="flex items-center gap-4">
+          {spotifyToken ? null : <button onClick={connectToSpotify} className="py-2 px-4 bg-green-500 text-white rounded">Connect Spotify</button>}
+          <button onClick={handleLogout} className="p-2 bg-red-500 rounded text-white"><LogOut size={20}/></button>
         </div>
+      </header>
 
-        {!spotifyToken ? (
-          <button onClick={connectToSpotify} className="w-full py-3 bg-green-600 text-white rounded mb-6">🎵 Connect Spotify</button>
-        ) : (
-          <p className="bg-green-50 border border-green-200 p-4 rounded mb-6 text-green-700">✅ Connected to Spotify</p>
-        )}
-
-        <h2 className="text-xl font-bold mb-4">Select Your Mood</h2>
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-6">
-          {Object.entries(moodQueries).map(([mood,{icon:Icon}])=>(
-            <button key={mood} onClick={()=>fetchMoodTracks(mood)} className={`p-4 border rounded ${selectedMood===mood?'border-purple-600 bg-purple-50':'border-gray-200 hover:border-purple-400'}`}>
-              <Icon size={32} className="mx-auto mb-2"/>
-              <p className="capitalize text-center">{mood}</p>
-            </button>
-          ))}
+      <section className="mb-6">
+        <h2 className="text-xl font-semibold mb-3">Select Your Mood</h2>
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+          {Object.keys(moodQueries).map(mood => {
+            const Icon = moodQueries[mood].icon;
+            return (
+              <button key={mood} onClick={()=>fetchMoodTracks(mood)}
+                className={`flex flex-col items-center justify-center p-4 rounded-xl text-white bg-gradient-to-br ${moodQueries[mood].color} shadow`}>
+                <Icon size={32} className="mb-2"/>
+                <span className="capitalize font-semibold">{mood}</span>
+              </button>
+            )
+          })}
         </div>
+      </section>
 
-        {loading && <p>Loading playlist...</p>}
-
-        {!loading && tracks.length>0 && (
-          <div>
-            <h2 className="text-2xl font-bold mb-4">{selectedMood.charAt(0).toUpperCase()+selectedMood.slice(1)} Playlist</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {tracks.map(track=>(
-                <div key={track.id} className="border rounded shadow p-4">
-                  <img src={track.album.images[1]?.url||track.album.images[0]?.url} alt={track.name} className="w-full h-48 object-cover mb-2"/>
-                  <h3 className="font-semibold mb-1 truncate">{track.name}</h3>
-                  <p className="text-sm mb-2 truncate">{track.artists.map(a=>a.name).join(', ')}</p>
-                  <div className="flex gap-2">
-                    {track.preview_url && <button onClick={()=>playPreview(track.preview_url,track.id)} className={`flex-1 py-2 rounded ${playingTrackId===track.id?'bg-red-500':'bg-green-600'} text-white`}>{playingTrackId===track.id?'⏸ Stop':'▶ Preview'}</button>}
-                    <a href={track.external_urls.spotify} target="_blank" rel="noopener noreferrer" className="flex-1 py-2 bg-purple-600 rounded text-white text-center">Open</a>
-                  </div>
+      <section>
+        {loading && <p className="text-gray-600">Loading tracks...</p>}
+        {tracks.length > 0 && (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {tracks.map(track => (
+              <div key={track.id} className="flex items-center gap-4 p-3 bg-white rounded shadow">
+                {track.album.images[0] && <img src={track.album.images[0].url} alt={track.name} className="w-16 h-16 rounded"/>}
+                <div className="flex-1">
+                  <p className="font-semibold">{track.name}</p>
+                  <p className="text-sm text-gray-500">{track.artists.map(a=>a.name).join(', ')}</p>
                 </div>
-              ))}
-            </div>
+                {track.preview_url && (
+                  <button onClick={()=>playPreview(track.preview_url, track.id)} className="p-2 bg-purple-600 text-white rounded">
+                    {playingTrackId === track.id ? 'Pause' : 'Play'}
+                  </button>
+                )}
+              </div>
+            ))}
           </div>
         )}
-
-      </div>
+      </section>
     </div>
   );
 }
