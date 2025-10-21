@@ -1,29 +1,22 @@
 import React, { useState, useEffect } from 'react';
 import { Music, LogOut, Smile, Frown, Meh, Heart, Cloud, Flame } from 'lucide-react';
 
-// Replace these with your actual Supabase credentials (optional - for future)
-const SUPABASE_CONFIG = {
-  url: 'YOUR_SUPABASE_URL',
-  key: 'YOUR_SUPABASE_ANON_KEY'
-};
-
-// Replace with YOUR Spotify Client ID from Spotify Developer Dashboard
-const SPOTIFY_CLIENT_ID = "cadcdebb966f4d3a844d6613579033f6";
-const REDIRECT_URI = window.location.origin;
+// Deezer API - No authentication required!
+const DEEZER_API = 'https://api.deezer.com';
+const CORS_PROXY = 'https://corsproxy.io/?';
 
 const moodQueries = {
-  chill: { query: "chill study lofi", icon: Cloud, color: "from-purple-400 to-teal-400" },
-  happy: { query: "happy upbeat pop", icon: Smile, color: "from-yellow-400 to-orange-500" },
-  sad: { query: "sad melancholy", icon: Frown, color: "from-blue-600 to-blue-900" },
-  insecure: { query: "sad emotional indie", icon: Meh, color: "from-teal-400 to-gray-600" },
+  chill: { query: "chill lofi study", icon: Cloud, color: "from-purple-400 to-teal-400" },
+  happy: { query: "happy pop upbeat", icon: Smile, color: "from-yellow-400 to-orange-500" },
+  sad: { query: "sad emotional", icon: Frown, color: "from-blue-600 to-blue-900" },
+  insecure: { query: "melancholy indie", icon: Meh, color: "from-teal-400 to-gray-600" },
   burnout: { query: "calm meditation ambient", icon: Cloud, color: "from-gray-700 to-yellow-800" },
-  angst: { query: "angry rock alternative", icon: Flame, color: "from-black to-gray-600" }
+  angst: { query: "rock alternative angry", icon: Flame, color: "from-black to-gray-600" }
 };
 
 export default function MoodTunes() {
   const [currentPage, setCurrentPage] = useState('login');
   const [user, setUser] = useState(null);
-  const [spotifyToken, setSpotifyToken] = useState(null);
   const [selectedMood, setSelectedMood] = useState('');
   const [tracks, setTracks] = useState([]);
   const [currentAudio, setCurrentAudio] = useState(null);
@@ -41,7 +34,7 @@ export default function MoodTunes() {
   const [otpSent, setOtpSent] = useState(false);
   const [generatedOtp, setGeneratedOtp] = useState(null);
 
-  // In-memory user storage (will persist only during session)
+  // In-memory user storage
   const [users, setUsers] = useState([
     { email: 'm@gmail.com', password: '12345', name: 'Demo User' }
   ]);
@@ -55,26 +48,6 @@ export default function MoodTunes() {
       setCurrentPage('app');
     }
   }, []);
-
-  // Check for Spotify token in URL after redirect
-  useEffect(() => {
-    const hash = window.location.hash.substring(1);
-    const params = new URLSearchParams(hash);
-    const token = params.get('access_token');
-    
-    if (token) {
-      setSpotifyToken(token);
-      window.history.replaceState({}, document.title, window.location.pathname);
-      
-      // If we have a token but no user loaded yet, load from session
-      const savedUser = sessionStorage.getItem('moodtunes_user');
-      if (savedUser && !user) {
-        const userData = JSON.parse(savedUser);
-        setUser(userData);
-        setCurrentPage('app');
-      }
-    }
-  }, [user]);
 
   const handleSignup = (e) => {
     e.preventDefault();
@@ -100,6 +73,7 @@ export default function MoodTunes() {
     
     if (foundUser) {
       setUser(foundUser);
+      sessionStorage.setItem('moodtunes_user', JSON.stringify(foundUser));
       setCurrentPage('app');
       setEmail('');
       setPassword('');
@@ -110,7 +84,7 @@ export default function MoodTunes() {
 
   const handleLogout = () => {
     setUser(null);
-    setSpotifyToken(null);
+    sessionStorage.removeItem('moodtunes_user');
     setCurrentPage('login');
     setSelectedMood('');
     setTracks([]);
@@ -119,11 +93,6 @@ export default function MoodTunes() {
       setCurrentAudio(null);
       setPlayingTrackId(null);
     }
-  };
-
-  const connectToSpotify = () => {
-    const authUrl = `https://accounts.spotify.com/authorize?client_id=${SPOTIFY_CLIENT_ID}&response_type=token&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&scope=user-read-private%20user-read-email`;
-    window.location.href = authUrl;
   };
 
   const sendResetOtp = () => {
@@ -170,35 +139,31 @@ export default function MoodTunes() {
   };
 
   const fetchPlaylist = async (mood) => {
-    if (!spotifyToken) {
-      alert('Please connect to Spotify first!');
-      return;
-    }
-
     setSelectedMood(mood);
     setLoading(true);
     setTracks([]);
 
     try {
+      // Use Deezer API with CORS proxy
+      const searchQuery = encodeURIComponent(moodQueries[mood].query);
       const response = await fetch(
-        `https://api.spotify.com/v1/search?q=${encodeURIComponent(moodQueries[mood].query)}&type=track&limit=12`,
-        { headers: { 'Authorization': `Bearer ${spotifyToken}` } }
+        `${CORS_PROXY}${DEEZER_API}/search?q=${searchQuery}&limit=12`
       );
 
       if (!response.ok) {
-        if (response.status === 401) {
-          setSpotifyToken(null);
-          alert('Session expired. Please reconnect to Spotify.');
-          return;
-        }
-        throw new Error('Spotify API error');
+        throw new Error('Deezer API error');
       }
 
       const data = await response.json();
-      setTracks(data.tracks.items);
+      
+      if (data.data && data.data.length > 0) {
+        setTracks(data.data);
+      } else {
+        alert('No tracks found for this mood. Try another!');
+      }
     } catch (error) {
       console.error('Error fetching tracks:', error);
-      alert('Failed to fetch tracks. Please try reconnecting to Spotify.');
+      alert('Failed to fetch tracks. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -216,7 +181,11 @@ export default function MoodTunes() {
     }
 
     const audio = new Audio(url);
-    audio.play();
+    audio.play().catch(err => {
+      console.error('Audio playback error:', err);
+      alert('Unable to play preview. Try another track!');
+    });
+    
     setCurrentAudio(audio);
     setPlayingTrackId(trackId);
 
@@ -240,6 +209,7 @@ export default function MoodTunes() {
             </div>
             <h1 className="text-5xl font-bold mb-3">MoodTunes</h1>
             <p className="text-lg opacity-90">Your soundtrack for every mood</p>
+            <p className="text-sm opacity-75 mt-2">Powered by Deezer 🎵</p>
           </div>
 
           <div className="flex-1 w-full max-w-md">
@@ -436,7 +406,7 @@ export default function MoodTunes() {
               <MoodIcon size={40} className="text-purple-600" />
               <div>
                 <h1 className="text-3xl font-bold text-gray-800">MoodTunes</h1>
-                <p className="text-sm text-gray-600">Welcome, {user?.name}!</p>
+                <p className="text-sm text-gray-600">Welcome, {user?.name}! 🎵</p>
               </div>
             </div>
             <button
@@ -448,21 +418,11 @@ export default function MoodTunes() {
             </button>
           </div>
 
-          {!spotifyToken ? (
-            <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-              <p className="text-sm text-gray-700 mb-3">Connect to Spotify for personalized playlists!</p>
-              <button
-                onClick={connectToSpotify}
-                className="w-full bg-green-600 text-white py-3 rounded-lg font-semibold hover:bg-green-700 transition"
-              >
-                🎵 Connect Spotify
-              </button>
-            </div>
-          ) : (
-            <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-              <p className="text-green-700 font-semibold">✅ Connected to Spotify</p>
-            </div>
-          )}
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <p className="text-sm text-blue-800">
+              ✨ <strong>No setup required!</strong> Select a mood below to discover music instantly.
+            </p>
+          </div>
         </div>
 
         <div className="bg-white bg-opacity-95 rounded-2xl shadow-2xl p-6 mb-6">
@@ -472,12 +432,11 @@ export default function MoodTunes() {
               <button
                 key={mood}
                 onClick={() => fetchPlaylist(mood)}
-                disabled={!spotifyToken}
                 className={`p-4 rounded-xl border-2 transition-all ${
                   selectedMood === mood
                     ? 'border-purple-600 bg-purple-50'
                     : 'border-gray-200 hover:border-purple-400'
-                } ${!spotifyToken ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+                } cursor-pointer`}
               >
                 <Icon size={32} className="mx-auto mb-2" />
                 <p className="font-semibold capitalize">{mood}</p>
@@ -505,19 +464,19 @@ export default function MoodTunes() {
                   className="bg-white rounded-lg shadow hover:shadow-xl transition-all overflow-hidden border border-gray-100"
                 >
                   <img
-                    src={track.album.images[1]?.url || track.album.images[0]?.url}
-                    alt={track.name}
+                    src={track.album.cover_medium || track.album.cover}
+                    alt={track.title}
                     className="w-full h-48 object-cover"
                   />
                   <div className="p-4">
-                    <h3 className="font-semibold text-gray-800 mb-1 truncate">{track.name}</h3>
+                    <h3 className="font-semibold text-gray-800 mb-1 truncate">{track.title}</h3>
                     <p className="text-sm text-gray-600 mb-3 truncate">
-                      {track.artists.map(a => a.name).join(', ')}
+                      {track.artist.name}
                     </p>
                     <div className="flex gap-2">
-                      {track.preview_url && (
+                      {track.preview && (
                         <button
-                          onClick={() => playPreview(track.preview_url, track.id)}
+                          onClick={() => playPreview(track.preview, track.id)}
                           className={`flex-1 py-2 rounded-lg font-semibold transition ${
                             playingTrackId === track.id
                               ? 'bg-red-500 hover:bg-red-600 text-white'
@@ -528,7 +487,7 @@ export default function MoodTunes() {
                         </button>
                       )}
                       <a
-                        href={track.external_urls.spotify}
+                        href={track.link}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="flex-1 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-semibold text-center transition"
