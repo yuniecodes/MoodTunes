@@ -13,6 +13,16 @@ const moodQueries = {
   angst: { query: "filipino opm demi slimademidemiislime because leslie hev abi", icon: Flame, color: "from-black to-gray-600" }
 };
 
+// Playlist IDs you provided
+const moodTracks = {
+  chill: ["7jXwaYTaruWQVmJgjAyVGj","1mJ9oAPuo3hHspOYamtoYc","7eKgcdYbbjQWjphO6IlZ7k","23MBi1j2kZJw3pTeTM2F3J","1iAm2oejGN7IOsaUkq2tgy","2Dgn3acAIPy3irYt7FHEkA","0sujgb2YTnMPzz9y4wNdWH","7KerpptlTiH5Yi3yt1iIsJ","783WjblRwRmcwQ9io7mBZv"],
+  happy: ["455AfCsOhhLPRc68sE01D8","10Igtw8bSDyyFs7KIsKngZ","35mvY5S1H3J2QZyna3TFe0","1hG4V53eR16jg7jVTNLOiX","5HQVUIKwCEXpe7JIHyY734","5nujrmhLynf4yMoMtj8AQF","3ZFTkvIE7kyPt6Nu3PEa7V","7ju97lgwC2rKQ6wwsf9no9","6kex4EBAj0WHXDKZMEJaaF"],
+  sad: ["3gdPwk2wyOXNRnTA1KXnEr","5rbuv6zso7QSaKt265H3M3","2gMXnyrvIjhVBUZwvLZDMP","4kkWvBCT6wq5NHoJjYRaPU","0SuQMjb2TleiKg1ebQSDnX","4cBm8rv2B5BJWU2pDaHVbF","7qEHsqek33rTcFNT9PFqLf","2uOEendbLHR18khIbwooJ1","5JCoSi02qi3jJeHdZXMmR8"],
+  insecure: ["4xqrdfXkTW4T0RauPLv3WA","5CZ40GBx1sQ9agT82CLQCT","69HzZ3ti9DLwb0GdWCGYSo","0kn2gu8Pd03DiYHzRvX2Xk","6KfoDhO4XUWSbnyKjNp9c4","3vkCueOmm7xQDoJ17W1Pm3","2IVsRhKrx8hlQBOWy4qebo","5UXJzLFdBn6u9FJTCnoHrH","7wTqEW5nrMhvyEhEyTnOMd"],
+  burnout: ["1KQc37jezhunxnOPhvdwSG","5OKyAO31eOeJV5qEx2lv4k","2bu6TFn64ASDFXocD9HQ38","7vu0JkJh0ldukEYbTVcqd0","7loxeufSLQPImESzV0Cn30","75pQd26khpV9EMVBRIeDm6","2n0U2OG5d6TuW5mKx7YrC0","2z1xTVeAvEIdniWEnoGeAH","5o5akY9xnEk6lpMkD8RwD9"],
+  angst: ["2ADSh3Mp744n2586tpUtIW","0NJAqnvbF6vzripOB7PclP","2tzAN1L07SNwnOdgOEeuQr","1nzcXFlq2lJULOJxCg5vBA","57Z7lSnhwx82laEb6rdZPB","2ESL2ZcFU32llFIyXLFy5P","7C9Knp9FzLY6RwgktmW9Ge","7C9Knp9FzLY6RwgktmW9Ge","01iNOMVE89uKaurFTDZX2Y"]
+};
+
 export default function MoodTunes() {
   const [currentPage, setCurrentPage] = useState('login');
   const [user, setUser] = useState(null);
@@ -276,11 +286,10 @@ export default function MoodTunes() {
                   </button>
                 </p>
               </div>
-            </div>
-          </div>
-        </div>
-      {showForgotPassword && (
+                    </div> {/* closes the login/signup card */}
+        {showForgotPassword && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-6 z-50">
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-6 z-50">
             <div className="bg-white rounded-2xl p-8 max-w-md w-full">
               <h2 className="text-2xl font-bold mb-4">Reset Password</h2>
               
@@ -475,3 +484,4 @@ export default function MoodTunes() {
     </div>
   );
 }
+
