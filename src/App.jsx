@@ -352,8 +352,7 @@ export default function MoodTunes() {
           </div>
         )}
       </div>
-    );
-  }
+    )}
 
   // MOBILE-READY SIGNUP PAGE
   if (currentPage === 'signup') {
@@ -484,4 +483,5 @@ export default function MoodTunes() {
     </div>
   );
 }
+
 
