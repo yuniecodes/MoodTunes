@@ -6,12 +6,21 @@ const SPOTIFY_CLIENT_ID = "cadcdebb966f4d3a844d6613579033f6";
 const REDIRECT_URI = "https://mood-tunes-three.vercel.app/callback";
 
 const moodQueries = {
-  chill: { query: "lofi hip hop study beats relaxing", icon: Cloud, color: "from-purple-400 to-teal-400" },
-  happy: { query: "2000s 2010s dance pop katy perry rihanna taylor swift", icon: Smile, color: "from-yellow-400 to-orange-500" },
-  sad: { query: "lewis capaldi olivia rodrigo joji sad crying depressing", icon: Frown, color: "from-blue-600 to-blue-900" },
-  insecure: { query: "conan gray heather bedroom pop indie sad", icon: Meh, color: "from-teal-400 to-gray-600" },
-  burnout: { query: "em beihold marina julia michaels burnt out tired", icon: Cloud, color: "from-gray-700 to-yellow-800" },
-  angst: { query: "filipino opm demi slimademidemiislime because leslie hev abi", icon: Flame, color: "from-black to-gray-600" }
+  chill: { icon: Cloud, color: "from-purple-400 to-teal-400" },
+  happy: { icon: Smile, color: "from-yellow-400 to-orange-500" },
+  sad: { icon: Frown, color: "from-blue-600 to-blue-900" },
+  insecure: { icon: Meh, color: "from-teal-400 to-gray-600" },
+  burnout: { icon: Cloud, color: "from-gray-700 to-yellow-800" },
+  angst: { icon: Flame, color: "from-black to-gray-600" }
+};
+
+const moodTracks = {
+  chill: ["7jXwaYTaruWQVmJgjAyVGj","1mJ9oAPuo3hHspOYamtoYc","7eKgcdYbbjQWjphO6IlZ7k","23MBi1j2kZJw3pTeTM2F3J","1iAm2oejGN7IOsaUkq2tgy","2Dgn3acAIPy3irYt7FHEkA","0sujgb2YTnMPzz9y4wNdWH","7KerpptlTiH5Yi3yt1iIsJ","783WjblRwRmcwQ9io7mBZv"],
+  happy: ["455AfCsOhhLPRc68sE01D8","10Igtw8bSDyyFs7KIsKngZ","35mvY5S1H3J2QZyna3TFe0","1hG4V53eR16jg7jVTNLOiX","5HQVUIKwCEXpe7JIHyY734","5nujrmhLynf4yMoMtj8AQF","3ZFTkvIE7kyPt6Nu3PEa7V","7ju97lgwC2rKQ6wwsf9no9","6kex4EBAj0WHXDKZMEJaaF"],
+  sad: ["3gdPwk2wyOXNRnTA1KXnEr","5rbuv6zso7QSaKt265H3M3","2gMXnyrvIjhVBUZwvLZDMP","4kkWvBCT6wq5NHoJjYRaPU","0SuQMjb2TleiKg1ebQSDnX","4cBm8rv2B5BJWU2pDaHVbF","7qEHsqek33rTcFNT9PFqLf","2uOEendbLHR18khIbwooJ1","5JCoSi02qi3jJeHdZXMmR8"],
+  insecure: ["4xqrdfXkTW4T0RauPLv3WA","5CZ40GBx1sQ9agT82CLQCT","69HzZ3ti9DLwb0GdWCGYSo","0kn2gu8Pd03DiYHzRvX2Xk","6KfoDhO4XUWSbnyKjNp9c4","3vkCueOmm7xQDoJ17W1Pm3","2IVsRhKrx8hlQBOWy4qebo","5UXJzLFdBn6u9FJTCnoHrH","7wTqEW5nrMhvyEhEyTnOMd"],
+  burnout: ["1KQc37jezhunxnOPhvdwSG","5OKyAO31eOeJV5qEx2lv4k","2bu6TFn64ASDFXocD9HQ38","7vu0JkJh0ldukEYbTVcqd0","7loxeufSLQPImESzV0Cn30","75pQd26khpV9EMVBRIeDm6","2n0U2OG5d6TuW5mKx7YrC0","2z1xTVeAvEIdniWEnoGeAH","5o5akY9xnEk6lpMkD8RwD9"],
+  angst: ["2ADSh3Mp744n2586tpUtIW","0NJAqnvbF6vzripOB7PclP","2tzAN1L07SNwnOdgOEeuQr","1nzcXFlq2lJULOJxCg5vBA","57Z7lSnhwx82laEb6rdZPB","2ESL2ZcFU32llFIyXLFy5P","7C9Knp9FzLY6RwgktmW9Ge","7C9Knp9FzLY6RwgktmW9Ge","01iNOMVE89uKaurFTDZX2Y"]
 };
 
 export default function MoodTunes() {
@@ -211,40 +220,42 @@ export default function MoodTunes() {
   };
 
   const fetchPlaylist = async (mood) => {
-    if (!spotifyToken) {
-      alert('Please connect to Spotify first!');
-      return;
-    }
+  if (!spotifyToken) {
+    alert('Please connect to Spotify first!');
+    return;
+  }
 
-    setSelectedMood(mood);
-    setLoading(true);
-    setTracks([]);
+  setSelectedMood(mood);
+  setLoading(true);
+  setTracks([]);
 
-    try {
-      const response = await fetch(
-        `https://api.spotify.com/v1/search?q=${encodeURIComponent(moodQueries[mood].query)}&type=track&limit=10`,
-        { headers: { 'Authorization': `Bearer ${spotifyToken}` } }
-      );
+  try {
+    const trackIds = moodTracks[mood].join(',');
 
-      if (!response.ok) {
-        if (response.status === 401) {
-          setSpotifyToken(null);
-          sessionStorage.removeItem('spotify_token');
-          alert('Session expired. Please reconnect to Spotify.');
-          return;
-        }
-        throw new Error('Spotify API error');
+    const response = await fetch(
+      `https://api.spotify.com/v1/tracks?ids=${trackIds}`,
+      { headers: { 'Authorization': `Bearer ${spotifyToken}` } }
+    );
+
+    if (!response.ok) {
+      if (response.status === 401) {
+        setSpotifyToken(null);
+        sessionStorage.removeItem('spotify_token');
+        alert('Session expired. Please reconnect to Spotify.');
+        return;
       }
-
-      const data = await response.json();
-      setTracks(data.tracks.items);
-    } catch (error) {
-      console.error('Error fetching tracks:', error);
-      alert('Failed to fetch tracks. Please try reconnecting to Spotify.');
-    } finally {
-      setLoading(false);
+      throw new Error('Spotify API error');
     }
-  };
+
+    const data = await response.json();
+    setTracks(data.tracks); // `data.tracks` contains the array of track objects
+  } catch (error) {
+    console.error('Error fetching tracks:', error);
+    alert('Failed to fetch tracks. Please try reconnecting to Spotify.');
+  } finally {
+    setLoading(false);
+  }
+};
 
   const playPreview = (url, trackId) => {
     if (currentAudio) {
