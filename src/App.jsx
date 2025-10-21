@@ -13,7 +13,16 @@ const moodQueries = {
   angst: { query: "filipino opm demi slimademidemiislime because leslie hev abi", icon: Flame, color: "from-black to-gray-600" }
 };
 
-// Playlist IDs you provided
+const moodQueries = {
+  chill: { query: "lofi hip hop study beats relaxing", icon: Cloud, color: "from-purple-400 to-teal-400" },
+  happy: { query: "2000s 2010s dance pop katy perry rihanna taylor swift", icon: Smile, color: "from-yellow-400 to-orange-500" },
+  sad: { query: "lewis capaldi olivia rodrigo joji sad crying depressing", icon: Frown, color: "from-blue-600 to-blue-900" },
+  insecure: { query: "conan gray heather bedroom pop indie sad", icon: Meh, color: "from-teal-400 to-gray-600" },
+  burnout: { query: "em beihold marina julia michaels burnt out tired", icon: Cloud, color: "from-gray-700 to-yellow-800" },
+  angst: { query: "filipino opm demi slimademidemiislime because leslie hev abi", icon: Flame, color: "from-black to-gray-600" }
+};
+
+// ✅ Hardcoded mood tracks
 const moodTracks = {
   chill: ["7jXwaYTaruWQVmJgjAyVGj","1mJ9oAPuo3hHspOYamtoYc","7eKgcdYbbjQWjphO6IlZ7k","23MBi1j2kZJw3pTeTM2F3J","1iAm2oejGN7IOsaUkq2tgy","2Dgn3acAIPy3irYt7FHEkA","0sujgb2YTnMPzz9y4wNdWH","7KerpptlTiH5Yi3yt1iIsJ","783WjblRwRmcwQ9io7mBZv"],
   happy: ["455AfCsOhhLPRc68sE01D8","10Igtw8bSDyyFs7KIsKngZ","35mvY5S1H3J2QZyna3TFe0","1hG4V53eR16jg7jVTNLOiX","5HQVUIKwCEXpe7JIHyY734","5nujrmhLynf4yMoMtj8AQF","3ZFTkvIE7kyPt6Nu3PEa7V","7ju97lgwC2rKQ6wwsf9no9","6kex4EBAj0WHXDKZMEJaaF"],
@@ -22,6 +31,7 @@ const moodTracks = {
   burnout: ["1KQc37jezhunxnOPhvdwSG","5OKyAO31eOeJV5qEx2lv4k","2bu6TFn64ASDFXocD9HQ38","7vu0JkJh0ldukEYbTVcqd0","7loxeufSLQPImESzV0Cn30","75pQd26khpV9EMVBRIeDm6","2n0U2OG5d6TuW5mKx7YrC0","2z1xTVeAvEIdniWEnoGeAH","5o5akY9xnEk6lpMkD8RwD9"],
   angst: ["2ADSh3Mp744n2586tpUtIW","0NJAqnvbF6vzripOB7PclP","2tzAN1L07SNwnOdgOEeuQr","1nzcXFlq2lJULOJxCg5vBA","57Z7lSnhwx82laEb6rdZPB","2ESL2ZcFU32llFIyXLFy5P","7C9Knp9FzLY6RwgktmW9Ge","7C9Knp9FzLY6RwgktmW9Ge","01iNOMVE89uKaurFTDZX2Y"]
 };
+
 
 export default function MoodTunes() {
   const [currentPage, setCurrentPage] = useState('login');
@@ -32,6 +42,7 @@ export default function MoodTunes() {
   const [currentAudio, setCurrentAudio] = useState(null);
   const [playingTrackId, setPlayingTrackId] = useState(null);
   const [loading, setLoading] = useState(false);
+
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
@@ -41,7 +52,10 @@ export default function MoodTunes() {
   const [newPassword, setNewPassword] = useState('');
   const [otpSent, setOtpSent] = useState(false);
   const [generatedOtp, setGeneratedOtp] = useState(null);
-  const [users, setUsers] = useState([{ email: 'm@gmail.com', password: '12345', name: 'Demo User' }]);
+
+  const [users, setUsers] = useState([
+    { email: 'm@gmail.com', password: '12345', name: 'Demo User' }
+  ]);
 
   useEffect(() => {
     const savedUser = sessionStorage.getItem('moodtunes_user');
@@ -100,16 +114,12 @@ export default function MoodTunes() {
     setSelectedMood(mood);
     setLoading(true);
     try {
-      // Fetch track details using the playlist IDs
-      const fetchedTracks = await Promise.all(
-        moodTracks[mood].map(async (id) => {
-          const res = await fetch(`https://api.spotify.com/v1/tracks/${id}`, {
-            headers: { Authorization: `Bearer ${spotifyToken}` }
-          });
-          return await res.json();
-        })
+      const response = await fetch(
+        `https://api.spotify.com/v1/search?q=${encodeURIComponent(moodQueries[mood].query)}&type=track&limit=10`,
+        { headers: { 'Authorization': `Bearer ${spotifyToken}` } }
       );
-      setTracks(fetchedTracks);
+      const data = await response.json();
+      setTracks(data.tracks.items);
     } catch {
       alert('Failed to fetch tracks.');
     } finally {
@@ -137,7 +147,7 @@ export default function MoodTunes() {
   const MoodIcon = selectedMood ? moodQueries[selectedMood].icon : Music;
   const moodGradient = selectedMood ? moodQueries[selectedMood].color : "from-purple-600 to-blue-600";
 
-  // LOGIN PAGE
+  // MOBILE-READY LOGIN PAGE
   if (currentPage === 'login') {
     return (
       <div className={`min-h-screen bg-gradient-to-br ${moodGradient} flex flex-col justify-center items-center px-4 py-safe transition-all duration-1000`}>
@@ -147,13 +157,21 @@ export default function MoodTunes() {
             <h1 className="text-3xl sm:text-4xl font-bold text-gray-800">MoodTunes</h1>
             <p className="text-sm text-gray-500 mt-2">Your soundtrack for every mood</p>
           </div>
-          <input type="email" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} className="w-full px-4 py-3 border border-gray-300 rounded-lg mb-3 focus:ring-2 focus:ring-purple-500 outline-none" />
-          <input type="password" placeholder="Password" value={password} onChange={(e) => setPassword(e.target.value)} className="w-full px-4 py-3 border border-gray-300 rounded-lg mb-4 focus:ring-2 focus:ring-purple-500 outline-none" />
-          <button onClick={handleLogin} className="w-full bg-purple-600 text-white py-3 rounded-lg font-semibold hover:bg-purple-700 transition">Login</button>
+
+          <input type="email" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)}
+            className="w-full px-4 py-3 border border-gray-300 rounded-lg mb-3 focus:ring-2 focus:ring-purple-500 outline-none" />
+          <input type="password" placeholder="Password" value={password} onChange={(e) => setPassword(e.target.value)}
+            className="w-full px-4 py-3 border border-gray-300 rounded-lg mb-4 focus:ring-2 focus:ring-purple-500 outline-none" />
+          <button onClick={handleLogin}
+            className="w-full bg-purple-600 text-white py-3 rounded-lg font-semibold hover:bg-purple-700 transition">Login</button>
+
           <div className="mt-4 text-center text-sm text-gray-600">
             <p>Demo: <strong>m@gmail.com</strong> / <strong>12345</strong></p>
-            <p className="mt-2"> Don’t have an account?{' '}
-              <button onClick={() => setCurrentPage('signup')} className="text-purple-600 font-semibold hover:underline"> Sign Up </button>
+            <p className="mt-2">
+              Don’t have an account?{' '}
+              <button onClick={() => setCurrentPage('signup')} className="text-purple-600 font-semibold hover:underline">
+                Sign Up
+              </button>
             </p>
           </div>
         </div>
@@ -161,7 +179,7 @@ export default function MoodTunes() {
     );
   }
 
-  // SIGNUP PAGE
+  // MOBILE-READY SIGNUP PAGE
   if (currentPage === 'signup') {
     return (
       <div className={`min-h-screen bg-gradient-to-br ${moodGradient} flex flex-col justify-center items-center px-4 py-safe`}>
@@ -170,19 +188,27 @@ export default function MoodTunes() {
             <Music size={48} className="mx-auto mb-3 text-purple-600" />
             <h1 className="text-3xl font-bold text-gray-800">Create Account</h1>
           </div>
-          <input type="text" placeholder="Full Name" value={name} onChange={(e) => setName(e.target.value)} className="w-full px-4 py-3 border border-gray-300 rounded-lg mb-3 focus:ring-2 focus:ring-purple-500 outline-none" />
-          <input type="email" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} className="w-full px-4 py-3 border border-gray-300 rounded-lg mb-3 focus:ring-2 focus:ring-purple-500 outline-none" />
-          <input type="password" placeholder="Password" value={password} onChange={(e) => setPassword(e.target.value)} className="w-full px-4 py-3 border border-gray-300 rounded-lg mb-4 focus:ring-2 focus:ring-purple-500 outline-none" />
-          <button onClick={handleSignup} className="w-full bg-purple-600 text-white py-3 rounded-lg font-semibold hover:bg-purple-700 transition">Sign Up</button>
-          <p className="text-center text-sm text-gray-600 mt-4"> Already have an account?{' '}
-            <button onClick={() => setCurrentPage('login')} className="text-purple-600 font-semibold hover:underline"> Login </button>
+          <input type="text" placeholder="Full Name" value={name} onChange={(e) => setName(e.target.value)}
+            className="w-full px-4 py-3 border border-gray-300 rounded-lg mb-3 focus:ring-2 focus:ring-purple-500 outline-none" />
+          <input type="email" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)}
+            className="w-full px-4 py-3 border border-gray-300 rounded-lg mb-3 focus:ring-2 focus:ring-purple-500 outline-none" />
+          <input type="password" placeholder="Password" value={password} onChange={(e) => setPassword(e.target.value)}
+            className="w-full px-4 py-3 border border-gray-300 rounded-lg mb-4 focus:ring-2 focus:ring-purple-500 outline-none" />
+          <button onClick={handleSignup}
+            className="w-full bg-purple-600 text-white py-3 rounded-lg font-semibold hover:bg-purple-700 transition">Sign Up</button>
+
+          <p className="text-center text-sm text-gray-600 mt-4">
+            Already have an account?{' '}
+            <button onClick={() => setCurrentPage('login')} className="text-purple-600 font-semibold hover:underline">
+              Login
+            </button>
           </p>
         </div>
       </div>
     );
   }
 
-  // MAIN APP PAGE
+  // MAIN APP PAGE (mobile optimized)
   return (
     <div className={`min-h-screen bg-gradient-to-br ${moodGradient} p-4 sm:p-6`}>
       <div className="max-w-5xl mx-auto">
@@ -195,36 +221,25 @@ export default function MoodTunes() {
                 <p className="text-sm text-gray-600">Welcome, {user?.name}!</p>
               </div>
             </div>
-            <button onClick={handleLogout} className="flex items-center justify-center gap-2 px-4 py-2 w-full sm:w-auto bg-red-500 text-white rounded-lg hover:bg-red-600 transition">
-              <LogOut size={18} /> Logout
+            <button onClick={handleLogout}
+              className="flex items-center justify-center gap-2 px-4 py-2 w-full sm:w-auto bg-red-500 text-white rounded-lg hover:bg-red-600 transition">
+              <LogOut size={18} />
+              Logout
             </button>
           </div>
         </div>
 
-        {/* Spotify Connect button */}
-        {!spotifyToken && (
-          <div className="mb-4 text-center">
-            <button
-              onClick={connectToSpotify}
-              className="px-6 py-3 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700 transition"
-            >
-              Connect to Spotify
-            </button>
-          </div>
-        )}
-
         <div className="bg-white bg-opacity-95 rounded-2xl shadow-xl p-4 sm:p-6 mb-6">
-          <h2 className="text-lg sm:text-xl font-bold text-gray-800 mb-4 text-center sm:text-left"> How are you feeling? </h2>
+          <h2 className="text-lg sm:text-xl font-bold text-gray-800 mb-4 text-center sm:text-left">
+            How are you feeling?
+          </h2>
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4">
             {Object.entries(moodQueries).map(([mood, { icon: Icon }]) => (
-              <button
-                key={mood}
-                onClick={() => fetchPlaylist(mood)}
+              <button key={mood} onClick={() => fetchPlaylist(mood)}
                 disabled={!spotifyToken}
                 className={`p-3 sm:p-4 rounded-xl border-2 transition-all text-center ${
                   selectedMood === mood ? 'border-purple-600 bg-purple-50' : 'border-gray-200 hover:border-purple-400'
-                } ${!spotifyToken ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
-              >
+                } ${!spotifyToken ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}>
                 <Icon size={28} className="mx-auto mb-1 sm:mb-2" />
                 <p className="font-semibold text-sm sm:text-base capitalize">{mood}</p>
               </button>
@@ -241,23 +256,32 @@ export default function MoodTunes() {
 
         {!loading && tracks.length > 0 && (
           <div className="bg-white bg-opacity-95 rounded-2xl shadow-xl p-4 sm:p-6 overflow-y-auto max-h-[70vh]">
-            <h2 className="text-xl sm:text-2xl font-bold text-gray-800 mb-4"> 🎧 {selectedMood.charAt(0).toUpperCase() + selectedMood.slice(1)} Playlist </h2>
+            <h2 className="text-xl sm:text-2xl font-bold text-gray-800 mb-4">
+              🎧 {selectedMood.charAt(0).toUpperCase() + selectedMood.slice(1)} Playlist
+            </h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
               {tracks.map((track) => (
                 <div key={track.id} className="bg-white rounded-lg shadow hover:shadow-xl transition overflow-hidden border border-gray-100">
-                  <img src={track.album.images[1]?.url || track.album.images[0]?.url} alt={track.name} className="w-full h-40 sm:h-48 object-cover" />
+                  <img src={track.album.images[1]?.url || track.album.images[0]?.url}
+                    alt={track.name} className="w-full h-40 sm:h-48 object-cover" />
                   <div className="p-3 sm:p-4">
                     <h3 className="font-semibold text-gray-800 mb-1 truncate">{track.name}</h3>
                     <p className="text-sm text-gray-600 mb-3 truncate">{track.artists.map(a => a.name).join(', ')}</p>
                     <div className="flex flex-col sm:flex-row gap-2">
                       {track.preview_url && (
-                        <button onClick={() => playPreview(track.preview_url, track.id)} className={`flex-1 py-2 rounded-lg font-semibold transition ${
-                          playingTrackId === track.id ? 'bg-red-500 hover:bg-red-600 text-white' : 'bg-green-600 hover:bg-green-700 text-white'
-                        }`}>
+                        <button onClick={() => playPreview(track.preview_url, track.id)}
+                          className={`flex-1 py-2 rounded-lg font-semibold transition ${
+                            playingTrackId === track.id
+                              ? 'bg-red-500 hover:bg-red-600 text-white'
+                              : 'bg-green-600 hover:bg-green-700 text-white'
+                          }`}>
                           {playingTrackId === track.id ? '⏸ Stop' : '▶ Preview'}
                         </button>
                       )}
-                      <a href={track.external_urls.spotify} target="_blank" rel="noopener noreferrer" className="flex-1 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-semibold text-center transition"> Open </a>
+                      <a href={track.external_urls.spotify} target="_blank" rel="noopener noreferrer"
+                        className="flex-1 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-semibold text-center transition">
+                        Open
+                      </a>
                     </div>
                   </div>
                 </div>
@@ -265,7 +289,6 @@ export default function MoodTunes() {
             </div>
           </div>
         )}
-
       </div>
     </div>
   );
