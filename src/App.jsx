@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { Music, LogOut, Smile, Frown, Meh, Heart, Cloud, Flame } from 'lucide-react';
 
-// Replace these with your actual Supabase credentials
+// Replace these with your actual Supabase credentials (optional - for future)
 const SUPABASE_CONFIG = {
   url: 'YOUR_SUPABASE_URL',
   key: 'YOUR_SUPABASE_ANON_KEY'
 };
 
+// Replace with YOUR Spotify Client ID from Spotify Developer Dashboard
 const SPOTIFY_CLIENT_ID = "cadcdebb966f4d3a844d6613579033f6";
 const REDIRECT_URI = window.location.origin;
 
@@ -40,11 +41,22 @@ export default function MoodTunes() {
   const [otpSent, setOtpSent] = useState(false);
   const [generatedOtp, setGeneratedOtp] = useState(null);
 
-  // In-memory storage (replace with Supabase)
+  // In-memory user storage (will persist only during session)
   const [users, setUsers] = useState([
     { email: 'm@gmail.com', password: '12345', name: 'Demo User' }
   ]);
 
+  // Load user session on mount
+  useEffect(() => {
+    const savedUser = sessionStorage.getItem('moodtunes_user');
+    if (savedUser) {
+      const userData = JSON.parse(savedUser);
+      setUser(userData);
+      setCurrentPage('app');
+    }
+  }, []);
+
+  // Check for Spotify token in URL after redirect
   useEffect(() => {
     const hash = window.location.hash.substring(1);
     const params = new URLSearchParams(hash);
@@ -53,11 +65,27 @@ export default function MoodTunes() {
     if (token) {
       setSpotifyToken(token);
       window.history.replaceState({}, document.title, window.location.pathname);
+      
+      // If we have a token but no user loaded yet, load from session
+      const savedUser = sessionStorage.getItem('moodtunes_user');
+      if (savedUser && !user) {
+        const userData = JSON.parse(savedUser);
+        setUser(userData);
+        setCurrentPage('app');
+      }
     }
-  }, []);
+  }, [user]);
 
   const handleSignup = (e) => {
     e.preventDefault();
+    if (!name || !email || !password) {
+      alert('❌ Please fill in all fields.');
+      return;
+    }
+    if (users.find(u => u.email === email)) {
+      alert('❌ Email already exists. Please login.');
+      return;
+    }
     setUsers([...users, { name, email, password }]);
     alert('✅ Signup successful! Please login.');
     setCurrentPage('login');
@@ -86,6 +114,11 @@ export default function MoodTunes() {
     setCurrentPage('login');
     setSelectedMood('');
     setTracks([]);
+    if (currentAudio) {
+      currentAudio.pause();
+      setCurrentAudio(null);
+      setPlayingTrackId(null);
+    }
   };
 
   const connectToSpotify = () => {
@@ -94,6 +127,10 @@ export default function MoodTunes() {
   };
 
   const sendResetOtp = () => {
+    if (!resetEmail) {
+      alert('❌ Please enter your email.');
+      return;
+    }
     const userExists = users.find(u => u.email === resetEmail);
     
     if (!userExists) {
@@ -105,6 +142,7 @@ export default function MoodTunes() {
     setGeneratedOtp(generatedCode);
     setOtpSent(true);
     alert(`🔑 Reset OTP (demo): ${generatedCode}`);
+    console.log('Reset OTP:', generatedCode);
   };
 
   const verifyAndResetPassword = () => {
@@ -191,7 +229,7 @@ export default function MoodTunes() {
   const MoodIcon = selectedMood ? moodQueries[selectedMood].icon : Music;
   const moodGradient = selectedMood ? moodQueries[selectedMood].color : "from-purple-600 to-blue-600";
 
-  // Login Page
+  // LOGIN PAGE
   if (currentPage === 'login') {
     return (
       <div className={`min-h-screen bg-gradient-to-br ${moodGradient} flex items-center justify-center p-6 transition-all duration-1000`}>
@@ -323,7 +361,7 @@ export default function MoodTunes() {
     );
   }
 
-  // Signup Page
+  // SIGNUP PAGE
   if (currentPage === 'signup') {
     return (
       <div className={`min-h-screen bg-gradient-to-br ${moodGradient} flex items-center justify-center p-6 transition-all duration-1000`}>
@@ -388,7 +426,7 @@ export default function MoodTunes() {
     );
   }
 
-  // Main App
+  // MAIN APP
   return (
     <div className={`min-h-screen bg-gradient-to-br ${moodGradient} p-6 transition-all duration-1000`}>
       <div className="max-w-6xl mx-auto">
